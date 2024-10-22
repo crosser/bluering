@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-export PYBUILD_NAME=blering
+export PYBUILD_NAME=bluering
 
 %:
 	dh $@ --with python3 --buildsystem pybuild

@@ -121,16 +121,14 @@ class HRLog(Op):
     @property
     def sndbuf(self) -> bytes:
         # opcode + timestamp of past midnight
-        return pack(
-            "<L",
-            round(
-                datetime.fromisoformat(
-                    datetime.now()
-                    .astimezone(tz=timezone.utc)
-                    .strftime("%Y-%m-%d")
-                ).timestamp()
-            ),
-        )
+        if self.kwargs:
+            ref = self.kwargs.get("date")
+        else:
+            ref = (
+                datetime.now().astimezone(tz=timezone.utc).strftime("%Y-%m-%d")
+            )
+        print("Time ref", ref)
+        return pack("<L", round(datetime.fromisoformat(ref).timestamp()))
 
     def recv(self, char, data: bytes) -> None:
         if not self.data:  # First frame

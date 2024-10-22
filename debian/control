@@ -1,10 +1,10 @@
-Source: blering
+Source: bluering
 Maintainer: Eugene Crosser <crosser@average.org>
 Section: misc
 Priority: optional
 Standards-Version: 4.5.1
 X-Python-Version: >= 3.6
-Homepage: http://www.average.org/blering
+Homepage: http://www.average.org/bluering
 Build-Depends: black,
                debhelper-compat (= 12),
                dh-python,
@@ -12,7 +12,7 @@ Build-Depends: black,
                python3-all,
                python3-setuptools
 
-Package: blering
+Package: bluering
 Architecture: all
 Section: python
 Depends: ${misc:Depends},

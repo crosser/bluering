@@ -8,17 +8,17 @@ with open("debian/changelog", "r") as clog:
     )[0]
 
 setup(
-    name="blering",
+    name="bluering",
     version=version,
     description="Tool to communicate with some health sensor rings",
-    url="http://www.average.org/blering/",
+    url="http://www.average.org/bluering/",
     author="Eugene Crosser",
     author_email="crosser@average.org",
     install_requires=["bleak"],
     license="MIT",
     packages=[
-        "blering",
+        "bluering",
     ],
-    scripts=["scripts/blering"],
+    scripts=["scripts/bluering"],
     long_description=open("README.md").read(),
 )
