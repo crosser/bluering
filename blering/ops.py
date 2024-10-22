@@ -1,7 +1,15 @@
 from asyncio import Event
 from datetime import datetime, timezone
-from struct import pack
-from typing import Any, Dict, List
+from struct import pack, unpack
+from typing import Any, Dict, List, NamedTuple
+
+
+class StepInfo(NamedTuple):
+    date: str
+    time_index: int
+    calories: int
+    steps: int
+    distance: int
 
 
 class Op:
@@ -9,20 +17,16 @@ class Op:
     MULTI: bool = False
     kwargs: Dict[str, Any]
     data: List[bytes]
+    sndbuf: bytes = b""
 
     def __init__(self, **kwargs: Any) -> None:
         self.kwargs = kwargs
         self.done = Event()
         self.data = []
 
-    @property
-    def sndbuf(self) -> bytes:
-        return chr(self.OPCODE).encode()
-
     def send(self) -> bytes:
-        return (
-            self.sndbuf.ljust(15, b"\0") + chr(sum(self.sndbuf) % 256).encode()
-        )
+        data = pack("B", self.OPCODE) + self.sndbuf.ljust(14, b"\0")
+        return data + pack("B", sum(data) % 256)
 
     def recv(self, char, data: bytes) -> None:
         # print("char", char)
@@ -38,7 +42,7 @@ class Op:
             self.done.set()
 
     def result(self) -> str:
-        return [el.hex() for el in self.data]
+        return "\n".join([el.hex() for el in self.data])
 
 
 class Battery(Op):
@@ -52,7 +56,43 @@ class Blink(Op):
     OPCODE = 0x10
 
     def result(self) -> str:
-        return "Hopefully, the ring blinked twice"
+        return "Hopefully, the ring just blinked twice"
+
+
+class ReadSteps(Op):
+    OPCODE = 0x43
+    NULTI = True
+    sndbuf = b"\x00\x0f\x00\x5f\x01"
+
+    def recv(self, char, data: bytes) -> None:
+        if not self.data:  # First frame
+            if data[1] != 0xF0:
+                print("Received", data.hex(), "bad first frame")
+            self.frames = data[2]
+            # print("expect", self.frames, "more frames")
+            self.count = 0
+        super().recv(char, data)
+        self.count += 1
+        if self.count > self.frames:
+            # print("report done receiving")
+            self.done.set()
+
+    def result(self) -> str:
+        new_cal_proto = self.data[0][3] == 1
+        steps = []
+        for fr in self.data[1:]:
+            y, m, d = (
+                int(el.decode())
+                for el in unpack("2s2s2s", fr[1:4].hex().encode())
+            )
+            ti, cal, st, di = unpack("<BHHH", fr[4:11])
+            y += 2000
+            if new_cal_proto:
+                cal *= 10
+            steps.append(
+                StepInfo(datetime(y, m, d).isoformat(), ti, cal, st, di)
+            )
+        return "\n".join(str(el) for el in steps)
 
 
 class SetTime(Op):
@@ -62,8 +102,7 @@ class SetTime(Op):
     def sndbuf(self) -> bytes:
         # opcode + 6 bytes of datatime in BCD + 1 for English language(?)
         return (
-            super().sndbuf
-            + bytes.fromhex(
+            bytes.fromhex(
                 "".join(
                     f"{(el % 100):02d}"
                     for el in datetime.now()
@@ -82,7 +121,7 @@ class HRLog(Op):
     @property
     def sndbuf(self) -> bytes:
         # opcode + timestamp of past midnight
-        return super().sndbuf + pack(
+        return pack(
             "<L",
             round(
                 datetime.fromisoformat(
@@ -111,10 +150,9 @@ class HRLog(Op):
         # We have N frames with 13 bytes of payload in each, and that is
         # a concatanation of 12 byte structures
         bulk = memoryview(b"".join(buf[2:-1] for buf in self.data))
-        log = [bulk[i:i+12] for i in range(0, len(bulk), 12)]
+        log = [bulk[i : i + 12] for i in range(0, len(bulk), 12)]
         return "\n".join(bytes(el).hex() for el in log)
 
 
 #        #send = b"\x16\x01" # read settings
 #        #send = b"\x16\x02\x01\x1e"  # write settings, enabled, 30 min
-#        #send = b"\x43"  # read "sports data"
