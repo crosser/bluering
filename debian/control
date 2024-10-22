@@ -1,0 +1,21 @@
+Source: blering
+Maintainer: Eugene Crosser <crosser@average.org>
+Section: misc
+Priority: optional
+Standards-Version: 4.5.1
+X-Python-Version: >= 3.6
+Homepage: http://www.average.org/blering
+Build-Depends: black,
+               debhelper-compat (= 12),
+               dh-python,
+               mypy,
+               python3-all,
+               python3-setuptools
+
+Package: blering
+Architecture: all
+Section: python
+Depends: ${misc:Depends},
+         ${python3:Depends}
+Description: A tool to communicate with some health sensor rings
+ Uses Bluetooth Low Energy communication
