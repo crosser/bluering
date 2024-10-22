@@ -172,6 +172,8 @@ class LogSettings(Op):
             return b"\x01"
 
     def result(self) -> str:
+        if self.kwargs:
+            return "Done, hopefully"
         return (
             f"{'enabled' if self.data[0][2] == 1 else 'disabled'},"
             f" period {self.data[0][3]} min"

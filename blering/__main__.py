@@ -99,7 +99,7 @@ if __name__ == "__main__":
     if len(args) < 1 or args[0] not in OPS:
         print("Command unrecognized or absent")
         exit(1)
-    kwargs = {}
+    kwargs = dict(el.split(sep="=", maxsplit=1) for el in args[1:])
     op = OPS[args[0]](**kwargs)
     try:
         asyncio.run(main(op))
