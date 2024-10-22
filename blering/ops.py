@@ -150,8 +150,17 @@ class HRLog(Op):
         # We have N frames with 13 bytes of payload in each, and that is
         # a concatanation of 12 byte structures
         bulk = memoryview(b"".join(buf[2:-1] for buf in self.data))
-        log = [bulk[i : i + 12] for i in range(0, len(bulk), 12)]
-        return "\n".join(bytes(el).hex() for el in log)
+        prelude = bulk[:17]
+        (ts,) = unpack("<L", bulk[13:17])
+        print("time:", datetime.fromtimestamp(ts).isoformat())
+        log = (
+            f"{datetime.fromtimestamp(ts + (i * 300)).isoformat()}: {v}"
+            for i, v in enumerate(bulk[17:])
+            if v
+        )
+        return "\n".join(str(el) for el in log)
+        # log = [bulk[i : i + 12] for i in range(0, len(bulk), 12)]
+        # return "\n".join(bytes(el).hex() for el in log)
 
 
 class LogSettings(Op):
