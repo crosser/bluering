@@ -154,5 +154,25 @@ class HRLog(Op):
         return "\n".join(bytes(el).hex() for el in log)
 
 
-#        #send = b"\x16\x01" # read settings
-#        #send = b"\x16\x02\x01\x1e"  # write settings, enabled, 30 min
+class LogSettings(Op):
+    OPCODE = 0x16
+
+    @property
+    def sndbuf(self) -> bytes:
+        if self.kwargs:
+            opmode = b"\x02"
+            enabled = (
+                b"\x01"
+                if self.kwargs.get("enabled", "yes") == "yes"
+                else b"\x02"
+            )
+            period = pack("B", int(self.kwargs.get("period", "60")))
+            return opmode + enabled + period
+        else:
+            return b"\x01"
+
+    def result(self) -> str:
+        return (
+            f"{'enabled' if self.data[0][2] == 1 else 'disabled'},"
+            f" period {self.data[0][3]} min"
+        )
