@@ -2,7 +2,7 @@
 debian/*debhelper*
 debian/*.substvars
 debian/files
-debian/blering/
+debian/bluering/
 .pybuild
 build
-blering.egg-info
+bluering.egg-info

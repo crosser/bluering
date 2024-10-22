@@ -1,0 +1,23 @@
+---
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build Package
+        uses: crosser/build-dpkg@HEAD
+        id: build
+        with:
+          args: --unsigned-source --unsigned-changes
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ github.workspace }}/${{ steps.build.outputs.filename }}
