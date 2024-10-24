@@ -122,20 +122,18 @@ class HRLog(Op):
     def sndbuf(self) -> bytes:
         # opcode + timestamp of past midnight
         if self.kwargs:
-            ref = self.kwargs.get("date")
+            ref = datetime.fromisoformat(self.kwargs.get("date"))
         else:
-            ref = (
-                datetime.now().astimezone(tz=timezone.utc).strftime("%Y-%m-%d")
-            )
+            ref = datetime.now()
         print("Time ref", ref)
         return pack(
-            "<L", 86400 + round(datetime.fromisoformat(ref).timestamp())
+            "<L", 86400 + round(datetime(*ref.timetuple()[:3]).timestamp())
         )
 
     def recv(self, char, data: bytes) -> None:
         if not self.data:  # First frame
             self.frames = data[2]
-            print("expect", self.frames, "frames")
+            # print("expect", self.frames, "frames")
             self.count = 0
         if data[1] != self.count:
             print("count mismatch", data.hex(), "expected", self.count)
