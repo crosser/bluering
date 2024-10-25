@@ -1,3 +1,9 @@
+bluering (0.02) experimental; urgency=low
+
+  * Include some help printouts
+
+ -- Eugene Crosser <crosser@average.org>  Fri, 25 Oct 2024 22:13:55 +0200
+
 bluering (0.01) experimental; urgency=low
 
   * Initial version
