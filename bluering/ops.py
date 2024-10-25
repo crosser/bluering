@@ -46,6 +46,10 @@ class Op:
 
 
 class Battery(Op):
+    """
+    Report battery charge percentage
+    """
+
     OPCODE = 0x03
 
     def result(self) -> str:
@@ -53,6 +57,10 @@ class Battery(Op):
 
 
 class Blink(Op):
+    """
+    Blink twice
+    """
+
     OPCODE = 0x10
 
     def result(self) -> str:
@@ -60,6 +68,10 @@ class Blink(Op):
 
 
 class ReadSteps(Op):
+    """
+    Report history of step count and other health data
+    """
+
     OPCODE = 0x43
     NULTI = True
     sndbuf = b"\x00\x0f\x00\x5f\x01"
@@ -96,6 +108,10 @@ class ReadSteps(Op):
 
 
 class SetTime(Op):
+    """
+    Synchronize clock in the ring with the computer
+    """
+
     OPCODE = 0x01
 
     @property
@@ -115,6 +131,12 @@ class SetTime(Op):
 
 
 class HRLog(Op):
+    """
+    Report one day worth of HR measurements.
+    Optionally specify the date of interest in the form "date=YYYY-MM-DD".
+    Default is the current day.
+    """
+
     OPCODE = 0x15
     MULTI = True
 
@@ -163,6 +185,11 @@ class HRLog(Op):
 
 
 class LogSettings(Op):
+    """
+    Report or change HR log settings.
+    To set new period in minutes, specify "period=NN"
+    """
+
     OPCODE = 0x16
 
     @property

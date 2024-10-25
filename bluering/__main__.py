@@ -4,17 +4,16 @@ import asyncio
 from getopt import getopt
 from inspect import isclass
 from sys import argv
+from typing import Optional
 
 from bleak import BleakScanner, BleakClient
 
 from .ops import *
 
 OPS = {
-        cls.__name__.lower(): cls
-        for name, cls in globals().items()
-        if isclass(cls)
-        and issubclass(cls, Op)
-        and cls is not Op
+    cls.__name__.lower(): cls
+    for name, cls in globals().items()
+    if isclass(cls) and issubclass(cls, Op) and cls is not Op
 }
 
 verbose = False
@@ -30,6 +29,7 @@ UART_SRV_UUID = "6e40fff0-b5a3-f393-e0a9-e50e24dcca9e"
 UART_WRT_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
 UART_NOT_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
 
+
 def show(bstr):
     try:
         return bstr.decode("ascii")
@@ -37,7 +37,7 @@ def show(bstr):
         return bstr.hex()
 
 
-async def main(op: Op):
+async def main(addr: Optional[str], op: Op):
     fdev = None
     async with BleakScanner() as scanner:
         async for dev, data in scanner.advertisement_data():
@@ -50,7 +50,11 @@ async def main(op: Op):
                 data.rssi,
                 end="\033[K\r",
             )
-            if data.service_uuids and ADV_SRV_UUID in data.service_uuids:
+            if (
+                (addr is not None and dev.address == addr)
+                or data.service_uuids
+                and ADV_SRV_UUID in data.service_uuids
+            ):
                 fdev = dev
                 print("Found", fdev, end="\033[K\n")
                 break
@@ -80,9 +84,7 @@ async def main(op: Op):
             print("Characteristics not found")
             return
         await client.start_notify(UART_NOT_UUID, op.recv)
-        await client.write_gatt_char(
-            UART_WRT_UUID, op.send(), response=False
-        )
+        await client.write_gatt_char(UART_WRT_UUID, op.send(), response=False)
         await op.done.wait()
         await client.disconnect()
     print(op.result())
@@ -93,15 +95,19 @@ async def shutdown():
 
 
 if __name__ == "__main__":
-    topts, args = getopt(argv[1:], "v")
+    topts, args = getopt(argv[1:], "hva:")
     opts = dict(topts)
-    verbose = "v" in opts
-    if len(args) < 1 or args[0] not in OPS:
-        print("Command unrecognized or absent")
-        exit(1)
+    verbose = "-v" in opts
+    if len(args) == 0 or "-h" in opts or args[0] not in OPS:
+        print(f"Usage: {argv[0]} [-h] [-v] [-a ADDR] command [key=value ...]")
+        if len(args) > 0 and args[0] in OPS:
+            print("Command", args[0], ":", OPS[args[0]].__doc__)
+        else:
+            print("Commands are:", ", ".join(OPS.keys()))
+        exit(0)
     kwargs = dict(el.split(sep="=", maxsplit=1) for el in args[1:])
     op = OPS[args[0]](**kwargs)
     try:
-        asyncio.run(main(op))
+        asyncio.run(main(opts.get("a", None), op))
     except KeyboardInterrupt:
         asyncio.run(shutdown())
