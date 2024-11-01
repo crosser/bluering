@@ -33,7 +33,7 @@ class Op:
         # print("received:", data)
         if len(data) != 16:
             print("Response", data.hex(), "has wrong length", len(data))
-        if data[0] != self.OPCODE:
+        if (data[0] & 0x7F) != self.OPCODE:
             print("Response", data.hex(), "opcode mismatch", self.OPCODE)
         if sum(data[:-1]) % 256 != data[-1]:
             print("Response", data.hex(), "checksum mismatch")
@@ -113,21 +113,31 @@ class SetTime(Op):
     """
 
     OPCODE = 0x01
+    MULTI = True
 
     @property
     def sndbuf(self) -> bytes:
         # opcode + 6 bytes of datatime in BCD + 1 for English language(?)
+        # Note that this datetime representation depends on the timezone,
+        # i.e. if converted to time_t, it will _not_ be true time.
+        # Official Android app sends representaton for the local time zone:
+        # Oct 22, 2024 23:18:56.224381000 CEST
+        #     01241022 23 18 56 0100000000000000e9
+        TZ = None  # or set TZ = timezone.utc for UTC
         return (
             bytes.fromhex(
                 "".join(
                     f"{(el % 100):02d}"
-                    for el in datetime.now()
-                    .astimezone(tz=timezone.utc)
-                    .timetuple()[:6]
+                    for el in datetime.now().astimezone(tz=TZ).timetuple()[:6]
                 )
             )
             + b"\1"
         )
+
+    def recv(self, char, data: bytes) -> None:
+        super().recv(char, data)
+        if (data[0] & 0x7F) == self.OPCODE:
+            self.done.set()
 
 
 class HRLog(Op):
@@ -148,8 +158,11 @@ class HRLog(Op):
         else:
             ref = datetime.now()
         print("Time ref", ref)
+        TZ = None  # TZ = timezone.utc
         return pack(
-            "<L", 86400 + round(datetime(*ref.timetuple()[:3]).timestamp())
+            "<L",
+            86400
+            + round(datetime(*ref.timetuple()[:3], tzinfo=TZ).timestamp()),
         )
 
     def recv(self, char, data: bytes) -> None:
@@ -158,7 +171,14 @@ class HRLog(Op):
             # print("expect", self.frames, "frames")
             self.count = 0
         if data[1] != self.count:
-            print("count mismatch", data.hex(), "expected", self.count)
+            print(
+                "count mismatch",
+                data.hex(),
+                "expected",
+                self.count,
+                "of",
+                self.frames,
+            )
         self.count += 1
         super().recv(char, data)
         # print("got", self.count, "of", self.frames)
@@ -170,14 +190,13 @@ class HRLog(Op):
         # We have N frames with 13 bytes of payload in each, and that is
         # a concatanation of 12 byte structures
         bulk = memoryview(b"".join(buf[2:-1] for buf in self.data))
+        if len(bulk) < 17:
+            return "No HR log data"
         (ts,) = unpack("<L", bulk[13:17])
-        # print("prelude", bulk[:17].hex())
-        # print("len of hr list", len(bulk))
-        # for i in range(0, len(bulk), 12):
-        #     print(i, ":", [x for x in bulk[i : i + 12]])
-        # print("time:", datetime.fromtimestamp(ts).isoformat())
+        TZ = None  # TZ = timezone.utc
         log = (
-            f"{datetime.fromtimestamp(ts - 86400 + (i * 300)).isoformat()}: {v}"
+            f"{datetime.fromtimestamp(ts - 86400 + (i * 300))
+                .astimezone(tz=TZ).isoformat()}: {v}"
             for i, v in enumerate(bulk[17:])
             if v
         )
