@@ -203,9 +203,9 @@ class HRLog(Op):
         return "\n".join(str(el) for el in log)
 
 
-class LogSettings(Op):
+class HRPref(Op):
     """
-    Report or change HR log settings.
+    Report or change HR log preferences.
     To set new period in minutes, specify "period=NN"
     """
 
@@ -218,7 +218,7 @@ class LogSettings(Op):
             enabled = (
                 b"\x01"
                 if self.kwargs.get("enabled", "yes") == "yes"
-                else b"\x02"
+                else b"\x00"
             )
             period = pack("B", int(self.kwargs.get("period", "60")))
             return opmode + enabled + period
@@ -231,4 +231,32 @@ class LogSettings(Op):
         return (
             f"{'enabled' if self.data[0][2] == 1 else 'disabled'},"
             f" period {self.data[0][3]} min"
+        )
+
+
+class SpOPref(Op):
+    """
+    Report or change SpO2 log enabled/disabled status.
+    """
+
+    OPCODE = 0x2c
+
+    @property
+    def sndbuf(self) -> bytes:
+        if self.kwargs:
+            opmode = b"\x02"
+            enabled = (
+                b"\x01"
+                if self.kwargs.get("enabled", "yes") == "yes"
+                else b"\x02"
+            )
+            return opmode + enabled
+        else:
+            return b"\x01"
+
+    def result(self) -> str:
+        if self.kwargs:
+            return "Done, hopefully"
+        return (
+            f"{'enabled' if self.data[0][2] == 1 else 'disabled'},"
         )
