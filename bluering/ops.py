@@ -6,7 +6,6 @@ from typing import Any, Dict, List, NamedTuple
 
 class StepInfo(NamedTuple):
     date: str
-    time_index: int
     calories: int
     steps: int
     distance: int
@@ -67,7 +66,7 @@ class Blink(Op):
         return "Hopefully, the ring just blinked twice"
 
 
-class ReadSteps(Op):
+class ActLog(Op):
     """
     Report history of step count and other health data
     """
@@ -83,6 +82,11 @@ class ReadSteps(Op):
             self.frames = data[2]
             # print("expect", self.frames, "more frames")
             self.count = 0
+        else:
+            if data[5] != self.count - 1:
+                print("Received", data.hex(), "byte 5 must be", self.count - 1)
+            if data[6] != self.frames:
+                print("Received", data.hex(), "byte 6 must be", self.frames)
         super().recv(char, data)
         self.count += 1
         if self.count > self.frames:
@@ -97,12 +101,17 @@ class ReadSteps(Op):
                 int(el.decode())
                 for el in unpack("2s2s2s", fr[1:4].hex().encode())
             )
-            ti, cal, st, di = unpack("<BHHH", fr[4:11])
+            # fr[4] is the number of quarter-an-hours from midnight
+            hr = fr[4] // 4
+            mi = (fr[4] % 4) * 15
+            cal, st, di = unpack("<HHH", fr[7:13])
             y += 2000
             if new_cal_proto:
                 cal *= 10
             steps.append(
-                StepInfo(datetime(y, m, d).isoformat(), ti, cal, st, di)
+                StepInfo(
+                    datetime(y, m, d, hr, mi).isoformat(), cal, st, di
+                )
             )
         return "\n".join(str(el) for el in steps)
 
@@ -239,7 +248,7 @@ class SpOPref(Op):
     Report or change SpO2 log enabled/disabled status.
     """
 
-    OPCODE = 0x2c
+    OPCODE = 0x2C
 
     @property
     def sndbuf(self) -> bytes:
@@ -257,6 +266,4 @@ class SpOPref(Op):
     def result(self) -> str:
         if self.kwargs:
             return "Done, hopefully"
-        return (
-            f"{'enabled' if self.data[0][2] == 1 else 'disabled'},"
-        )
+        return f"{'enabled' if self.data[0][2] == 1 else 'disabled'},"
