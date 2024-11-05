@@ -25,10 +25,13 @@ verbose = False
 ADV_SRV_UUID = "00003802-0000-1000-8000-00805f9b34fb"
 
 # DEV_INFO_UUID = "0000180a-0000-1000-8000-00805f9b34fb"
-UART_SRV_UUID = "6e40fff0-b5a3-f393-e0a9-e50e24dcca9e"
-UART_WRT_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
-UART_NOT_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
 
+UART_SRV_UUID = "6e40fff0-b5a3-f393-e0a9-e50e24dcca9e"  # v1
+# UART_SRV_UUID = "de5bf728-d711-4e47-af26-65e3012a5dc7"  # v2
+UART_WRT_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"  # v1
+# UART_WRT_UUID = "de5bf72a-d711-4e47-af26-65e3012a5dc7"  # v2
+UART_NOT_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"  # v1
+# UART_NOT_UUID = "de5bf729-d711-4e47-af26-65e3012a5dc7"  # v2
 
 def show(bstr):
     try:
