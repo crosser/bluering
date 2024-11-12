@@ -1,3 +1,22 @@
+bluering (0.03) experimental; urgency=medium
+
+  * parse-btsnoop-hci.py: in/out frames from pcap
+  * Clean up timezone use
+  * Mention 'Freeyourgadget' project in the README
+  * Get/set SpO2 log setting
+  * Parse activity log more(?) correctly
+  * Write down (but not use) v2 collection of uuids
+  * parse-btsnoop-hci: support both v1 and v2 frames
+  * Propagate verbosity indicator to classes module
+  * Handle empty HR log cleanly
+  * Prepare to introduce classes for v2 protocol
+  * WIP on support of protocol v2
+  * Initial support for protocol v2
+  * Initial display for SpO2 log
+  * Implement SpO2 log report
+
+ -- Eugene Crosser <crosser@average.org>  Tue, 12 Nov 2024 23:17:30 +0100
+
 bluering (0.02) experimental; urgency=low
 
   * Include some help printouts
