@@ -186,14 +186,18 @@ class HRLog(Op):
             # print("expect", self.frames, "frames")
             self.count = 0
         if data[1] != self.count:
-            print(
-                "count mismatch",
-                data.hex(),
-                "expected",
-                self.count,
-                "of",
-                self.frames,
-            )
+            if data[1] == 0xff:  # No data
+                self.done.set()
+                return
+            else:
+                print(
+                    "count mismatch",
+                    data.hex(),
+                    "expected",
+                    self.count,
+                    "of",
+                    self.frames,
+                )
         self.count += 1
         super().recv(char, data)
         # print("got", self.count, "of", self.frames)
