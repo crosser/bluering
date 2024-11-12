@@ -256,9 +256,10 @@ class HRPref(Opv1):
         )
 
 
-class SpOPref(Opv1):
+class SpO2Pref(Opv1):
     """
     Report or change SpO2 log enabled/disabled status.
+    To change, specify "enabled={yes/no}"
     """
 
     OPCODE = 0x2C
