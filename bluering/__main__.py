@@ -29,15 +29,7 @@ verbose = False
 # the advertisements, so we will use it to detect the peripheral that we
 # want.
 ADV_SRV_UUID = "00003802-0000-1000-8000-00805f9b34fb"
-
 # DEV_INFO_UUID = "0000180a-0000-1000-8000-00805f9b34fb"
-
-UART_SRV_UUID = "6e40fff0-b5a3-f393-e0a9-e50e24dcca9e"  # v1
-# UART_SRV_UUID = "de5bf728-d711-4e47-af26-65e3012a5dc7"  # v2
-UART_WRT_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"  # v1
-# UART_WRT_UUID = "de5bf72a-d711-4e47-af26-65e3012a5dc7"  # v2
-UART_NOT_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"  # v1
-# UART_NOT_UUID = "de5bf729-d711-4e47-af26-65e3012a5dc7"  # v2
 
 
 def show(bstr):
@@ -85,16 +77,18 @@ async def main(addr: Optional[str], op: Op):
                         print(
                             f"\t\tWWR max size {char.max_write_without_response_size}"
                         )
-        if UART_SRV_UUID not in srvd:
-            print("Service", UART_SRV_UUID, "not found")
+        if op.UART_SRV_UUID not in srvd:
+            print("Service", op.UART_SRV_UUID, "not found")
             return
-        if {UART_WRT_UUID, UART_NOT_UUID} != {
-            c.uuid for c in srvd[UART_SRV_UUID].characteristics
+        if {op.UART_WRT_UUID, op.UART_NOT_UUID} != {
+            c.uuid for c in srvd[op.UART_SRV_UUID].characteristics
         }:
             print("Characteristics not found")
             return
-        await client.start_notify(UART_NOT_UUID, op.recv)
-        await client.write_gatt_char(UART_WRT_UUID, op.send(), response=False)
+        await client.start_notify(op.UART_NOT_UUID, op.recv)
+        await client.write_gatt_char(
+            op.UART_WRT_UUID, op.send(), response=False
+        )
         await op.done.wait()
         await client.disconnect()
     print(op.result())
@@ -109,6 +103,7 @@ if __name__ == "__main__":
     opts = dict(topts)
     verbose = "-v" in opts
     opsv1_verbosity(verbose)
+    opsv2_verbosity(verbose)
     if len(args) == 0 or "-h" in opts or args[0] not in OPS:
         print(f"Usage: {argv[0]} [-h] [-v] [-a ADDR] command [key=value ...]")
         if len(args) > 0 and args[0] in OPS:

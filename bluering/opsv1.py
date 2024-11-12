@@ -19,6 +19,9 @@ class StepInfo(NamedTuple):
 
 
 class Opv1:
+    UART_SRV_UUID = "6e40fff0-b5a3-f393-e0a9-e50e24dcca9e"
+    UART_WRT_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
+    UART_NOT_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
     OPCODE: int
     MULTI: bool = False
     kwargs: Dict[str, Any]

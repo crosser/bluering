@@ -12,6 +12,9 @@ def opsv2_verbosity(verbosity: bool) -> None:
 
 
 class Opv2:
+    UART_SRV_UUID = "de5bf728-d711-4e47-af26-65e3012a5dc7"
+    UART_WRT_UUID = "de5bf72a-d711-4e47-af26-65e3012a5dc7"
+    UART_NOT_UUID = "de5bf729-d711-4e47-af26-65e3012a5dc7"
     OPCODE: int
     kwargs: Dict[str, Any]
     data: bytes
@@ -31,7 +34,7 @@ class Opv2:
         if verbose:
             print(self.__class__.__name__, "received:", data.hex())
         if not self.data:  # First frame
-            if data[0] != b"\xbc":
+            if data[0] != 0xbc:
                 print("Unexpeted frame tag", data.hex())
                 return
             self.expect = (data[3] << 8) | data[2]
@@ -42,7 +45,7 @@ class Opv2:
             self.done.set()
 
     def result(self) -> str:
-        return data.hex()
+        return self.data.hex()
 
 
 class SPO2Log(Opv2):
