@@ -1,5 +1,5 @@
 from asyncio import Event
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta, date
 from struct import pack, unpack
 from typing import Any, Dict
 
@@ -34,14 +34,20 @@ class Opv2:
         if verbose:
             print(self.__class__.__name__, "received:", data.hex())
         if not self.data:  # First frame
-            if data[0] != 0xBC:
-                print("Unexpeted frame tag", data.hex())
+            if len(data) < 6:
+                print("Too short data", data.hex())
                 return
+            if data[0] != 0xBC:
+                print("Unexpected frame tag", data.hex())
+                return
+            if data[1] != self.OPCODE:
+                print("Opcode mismatch", data.hex())
             self.expect = (data[3] << 8) | data[2]
             if verbose:
                 print("Expect packet size", self.expect)
         self.data = self.data + data
         if len(self.data) >= self.expect + 6:
+            self.payload = memoryview(self.data)[6 : 6 + self.expect]
             self.done.set()
 
     def result(self) -> str:
@@ -58,14 +64,33 @@ class SPO2Log(Opv2):
     sndbuf = b"\x01\x00\xff\x00\xff"
 
     def result(self) -> str:
-        days = (
-            memoryview(self.data)[6 : 6 + self.expect][i * 49 : (i + 1) * 49]
-            for i in range(7)
+        days, rest = divmod(len(self.payload), 49)
+        if rest:
+            print("payload is not a round number of days", self.payload.hex())
+        dgrps = (self.payload[i * 49 : (i + 1) * 49] for i in range(days))
+        recs = (
+            (day[0], hr, lo, hi)
+            for day in dgrps
+            for hr, (lo, hi) in enumerate(
+                (day[1:][i * 2], day[1:][i * 2 + 1]) for i in range(24)
+            )
+            if day
+        )
+        dated_recs = (
+            (
+                datetime(
+                    *(
+                        (date.today() - timedelta(days=ddif)).timetuple()[:3]
+                        + (hr,)
+                    )
+                ),
+                lo,
+                hi,
+            )
+            for ddif, hr, lo, hi in recs
         )
         return "\n".join(
-            "\n".join(
-                f"{day[0]}: {day[1:][i*2]}-{day[1:][i*2+1]}" for i in range(24)
-            )
-            for day in days
-            if day
+            f"{dt.isoformat()}: {lo} - {hi}"
+            for dt, lo, hi in dated_recs
+            if lo or hi
         )
