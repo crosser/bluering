@@ -5,7 +5,7 @@ from typing import Any, Dict, List, NamedTuple
 
 verbose: bool = False
 
-def ops_verbosity(verbosity: bool) -> None:
+def opsv1_verbosity(verbosity: bool) -> None:
     global verbose
     verbose = verbosity
 
@@ -16,7 +16,7 @@ class StepInfo(NamedTuple):
     distance: int
 
 
-class Op:
+class Opv1:
     OPCODE: int
     MULTI: bool = False
     kwargs: Dict[str, Any]
@@ -50,7 +50,7 @@ class Op:
         return "\n".join([el.hex() for el in self.data])
 
 
-class Battery(Op):
+class Battery(Opv1):
     """
     Report battery charge percentage
     """
@@ -61,7 +61,7 @@ class Battery(Op):
         return f"{self.data[0][1]}%"
 
 
-class Blink(Op):
+class Blink(Opv1):
     """
     Blink twice
     """
@@ -72,7 +72,7 @@ class Blink(Op):
         return "Hopefully, the ring just blinked twice"
 
 
-class ActLog(Op):
+class ActLog(Opv1):
     """
     Report history of step count and other health data
     """
@@ -122,7 +122,7 @@ class ActLog(Op):
         return "\n".join(str(el) for el in steps)
 
 
-class SetTime(Op):
+class SetTime(Opv1):
     """
     Synchronize clock in the ring with the computer
     """
@@ -155,7 +155,7 @@ class SetTime(Op):
             self.done.set()
 
 
-class HRLog(Op):
+class HRLog(Opv1):
     """
     Report one day worth of HR measurements.
     Optionally specify the date of interest in the form "date=YYYY-MM-DD".
@@ -222,7 +222,7 @@ class HRLog(Op):
         return "\n".join(str(el) for el in log)
 
 
-class HRPref(Op):
+class HRPref(Opv1):
     """
     Report or change HR log preferences.
     To set new period in minutes, specify "period=NN"
@@ -253,7 +253,7 @@ class HRPref(Op):
         )
 
 
-class SpOPref(Op):
+class SpOPref(Opv1):
     """
     Report or change SpO2 log enabled/disabled status.
     """

@@ -4,17 +4,19 @@ import asyncio
 from getopt import getopt
 from inspect import isclass
 from sys import argv
-from typing import Optional
+from typing import Optional, Union
 
 from bleak import BleakScanner, BleakClient
 
-from .ops import *
+from .opsv1 import *
 
 OPS = {
     cls.__name__.lower(): cls
     for name, cls in globals().items()
-    if isclass(cls) and issubclass(cls, Op) and cls is not Op
+    if isclass(cls) and issubclass(cls, Opv1) and cls is not Opv1
 }
+
+Op = Union[Opv1]
 
 verbose = False
 
@@ -101,7 +103,7 @@ if __name__ == "__main__":
     topts, args = getopt(argv[1:], "hva:")
     opts = dict(topts)
     verbose = "-v" in opts
-    ops_verbosity(verbose)
+    opsv1_verbosity(verbose)
     if len(args) == 0 or "-h" in opts or args[0] not in OPS:
         print(f"Usage: {argv[0]} [-h] [-v] [-a ADDR] command [key=value ...]")
         if len(args) > 0 and args[0] in OPS:
