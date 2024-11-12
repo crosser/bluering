@@ -34,7 +34,7 @@ class Opv2:
         if verbose:
             print(self.__class__.__name__, "received:", data.hex())
         if not self.data:  # First frame
-            if data[0] != 0xbc:
+            if data[0] != 0xBC:
                 print("Unexpeted frame tag", data.hex())
                 return
             self.expect = (data[3] << 8) | data[2]
@@ -56,3 +56,16 @@ class SPO2Log(Opv2):
     OPCODE = 0x2A
 
     sndbuf = b"\x01\x00\xff\x00\xff"
+
+    def result(self) -> str:
+        days = (
+            memoryview(self.data)[6 : 6 + self.expect][i * 49 : (i + 1) * 49]
+            for i in range(7)
+        )
+        return "\n".join(
+            "\n".join(
+                f"{day[0]}: {day[1:][i*2]}-{day[1:][i*2+1]}" for i in range(24)
+            )
+            for day in days
+            if day
+        )
