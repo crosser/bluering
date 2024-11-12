@@ -5,9 +5,11 @@ from typing import Any, Dict, List, NamedTuple
 
 verbose: bool = False
 
+
 def opsv1_verbosity(verbosity: bool) -> None:
     global verbose
     verbose = verbosity
+
 
 class StepInfo(NamedTuple):
     date: str
@@ -115,9 +117,7 @@ class ActLog(Opv1):
             if new_cal_proto:
                 cal *= 10
             steps.append(
-                StepInfo(
-                    datetime(y, m, d, hr, mi).isoformat(), cal, st, di
-                )
+                StepInfo(datetime(y, m, d, hr, mi).isoformat(), cal, st, di)
             )
         return "\n".join(str(el) for el in steps)
 
@@ -186,7 +186,7 @@ class HRLog(Opv1):
             # print("expect", self.frames, "frames")
             self.count = 0
         if data[1] != self.count:
-            if data[1] == 0xff:  # No data
+            if data[1] == 0xFF:  # No data
                 self.done.set()
                 return
             else:

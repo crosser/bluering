@@ -9,14 +9,18 @@ from typing import Optional, Union
 from bleak import BleakScanner, BleakClient
 
 from .opsv1 import *
+from .opsv2 import *
 
 OPS = {
     cls.__name__.lower(): cls
     for name, cls in globals().items()
-    if isclass(cls) and issubclass(cls, Opv1) and cls is not Opv1
+    if isclass(cls)
+    and (issubclass(cls, Opv1) or issubclass(cls, Opv2))
+    and cls is not Opv1
+    and cls is not Opv2
 }
 
-Op = Union[Opv1]
+Op = Union[Opv1, Opv2]
 
 verbose = False
 
@@ -34,6 +38,7 @@ UART_WRT_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"  # v1
 # UART_WRT_UUID = "de5bf72a-d711-4e47-af26-65e3012a5dc7"  # v2
 UART_NOT_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"  # v1
 # UART_NOT_UUID = "de5bf729-d711-4e47-af26-65e3012a5dc7"  # v2
+
 
 def show(bstr):
     try:
