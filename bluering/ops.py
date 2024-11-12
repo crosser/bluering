@@ -3,6 +3,11 @@ from datetime import datetime, timezone
 from struct import pack, unpack
 from typing import Any, Dict, List, NamedTuple
 
+verbose: bool = False
+
+def ops_verbosity(verbosity: bool) -> None:
+    global verbose
+    verbose = verbosity
 
 class StepInfo(NamedTuple):
     date: str
@@ -29,7 +34,8 @@ class Op:
 
     def recv(self, char, data: bytes) -> None:
         # print("char", char)
-        # print("received:", data)
+        if verbose:
+            print(self.__class__.__name__, "received:", data.hex())
         if len(data) != 16:
             print("Response", data.hex(), "has wrong length", len(data))
         if (data[0] & 0x7F) != self.OPCODE:

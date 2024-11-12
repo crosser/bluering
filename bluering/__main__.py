@@ -101,6 +101,7 @@ if __name__ == "__main__":
     topts, args = getopt(argv[1:], "hva:")
     opts = dict(topts)
     verbose = "-v" in opts
+    ops_verbosity(verbose)
     if len(args) == 0 or "-h" in opts or args[0] not in OPS:
         print(f"Usage: {argv[0]} [-h] [-v] [-a ADDR] command [key=value ...]")
         if len(args) > 0 and args[0] in OPS:
