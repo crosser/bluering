@@ -94,3 +94,54 @@ class SPO2Log(Opv2):
             for dt, lo, hi in dated_recs
             if lo or hi
         )
+
+
+class SleepLog(Opv2):
+    """
+    Report history of sleep
+    """
+
+    OPCODE = 0x27
+
+    sndbuf = b"\x01\x00\xff\x00\xff"
+
+    def result(self) -> str:
+        numdays = self.payload[0]
+        today = date.today()
+
+        def days() -> bytes:
+            rest = self.payload[1:]
+            while rest:
+                ago = rest[0]
+                sz = rest[1]
+                yield (ago, rest[2 : sz + 2])
+                rest = rest[sz + 2 :]
+
+        def timeof(ago, minoff) -> datetime:
+            return (
+                datetime(*today.timetuple()[:3])
+                - timedelta(days=ago)
+                + timedelta(minutes=minoff)
+            )
+
+        def sleepmode(i: int) -> str:
+            return {2: "l", 3: "d", 4: "r", 5: "a"}.get(i, "?")
+
+        output = ""
+        for ago, cont in days():
+            sleepstart, sleepend = unpack("<HH", cont[:4])
+            if sleepstart > sleepend:
+                sleepstart -= 1440  # minutes in the day
+            beg = timeof(ago, sleepstart)
+            end = timeof(ago, sleepend)
+            hr, mi = divmod((end - beg).seconds // 60, 60)
+            output += (
+                f"{beg.isoformat()} - {end.isoformat()} ({hr}:{mi:02})\n\t"
+                + ", ".join(
+                    f"{cont[4:][i * 2 + 1]}{sleepmode(cont[4:][i * 2])}"
+                    for i in range(0, (len(cont) - 4) // 2)
+                )
+                + "\n"
+            )
+        output += "(Sleep start - end (total); minutes [l]ight/[d]eep sleep, [a]wake)"
+        return output
