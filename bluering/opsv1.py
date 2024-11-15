@@ -235,7 +235,7 @@ class HRPref(Opv1):
 
     @property
     def sndbuf(self) -> bytes:
-        if self.kwargs:
+        if "enabled" in self.kwargs:
             opmode = b"\x02"
             enabled = (
                 b"\x01"
@@ -256,17 +256,15 @@ class HRPref(Opv1):
         )
 
 
-class SpO2Pref(Opv1):
+class _SimplePref(Opv1):
     """
     Report or change SpO2 log enabled/disabled status.
     To change, specify "enabled={yes/no}"
     """
 
-    OPCODE = 0x2C
-
     @property
     def sndbuf(self) -> bytes:
-        if self.kwargs:
+        if "enabled" in self.kwargs:
             opmode = b"\x02"
             enabled = (
                 b"\x01"
@@ -280,4 +278,31 @@ class SpO2Pref(Opv1):
     def result(self) -> str:
         if self.kwargs:
             return "Done, hopefully"
-        return f"{'enabled' if self.data[0][2] == 1 else 'disabled'},"
+        return f"{'enabled' if self.data[0][2] == 1 else 'disabled'}"
+
+
+class SpO2Pref(_SimplePref):
+    """
+    Report or change SpO2 log enabled/disabled status.
+    To change, specify "enabled={yes/no}"
+    """
+
+    OPCODE = 0x2C
+
+
+class StressPref(_SimplePref):
+    """
+    Report or change Stress log enabled/disabled status.
+    To change, specify "enabled={yes/no}"
+    """
+
+    OPCODE = 0x36
+
+
+class HrvPref(_SimplePref):
+    """
+    Report or change HRV log enabled/disabled status.
+    To change, specify "enabled={yes/no}"
+    """
+
+    OPCODE = 0x38

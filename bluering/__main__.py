@@ -18,6 +18,7 @@ OPS = {
     and (issubclass(cls, Opv1) or issubclass(cls, Opv2))
     and cls is not Opv1
     and cls is not Opv2
+    and not name.startswith("_")
 }
 
 Op = Union[Opv1, Opv2]
