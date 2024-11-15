@@ -63,7 +63,7 @@ class Battery(Opv1):
     OPCODE = 0x03
 
     def result(self) -> str:
-        return f"{self.data[0][1]}%"
+        return f"{self.data[0][1]}%{', charging' if self.data[0][2] else ''}"
 
 
 class Blink(Opv1):
