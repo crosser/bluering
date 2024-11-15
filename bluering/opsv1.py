@@ -225,6 +225,58 @@ class HRLog(Opv1):
         return "\n".join(str(el) for el in log)
 
 
+class UserPref(Opv1):
+    """
+    Set user characteristics.
+    Specify gender={male|female|other} system={metric|imperial}
+            age=NN height=NNN weight=NN bp-dia=NNN bp-sys=NNN hr-lim=NNN
+    """
+
+    OPCODE = 0x0A
+    VALID = {  # Must be in the order of encoding
+        "timeformat": ({"12", "24"}, "24"),
+        "system": ({"metric", "imperial"}, "metric"),
+        "gender": ({"male", "female", "other"}, "other"),
+        "age": (int, 50),
+        "height": (int, 165),
+        "weight": (int, 70),
+        "bp-sys": (int, 120),
+        "bp-dia": (int, 80),
+        "hr-lim": (int, 160),
+    }
+    ENC = {
+        "timeformat": {"12": 0x01, "24": 0x00},
+        "system": {"metric": 0x00, "imperial": 0x01},
+        "gender": {"male": 0x00, "female": 0x01, "other": 0x02},
+    }
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        if set(self.kwargs.keys()) - set(self.VALID.keys()) or not all(
+            (
+                v in self.VALID[k][0]
+                if isinstance(self.VALID[k][0], set)
+                else v.isnumeric()
+            )
+            for k, v in self.kwargs.items()
+        ):
+            raise ValueError("Valid kwargs are " + str(self.VALID))
+        parms = {k: v for k, (_, v) in self.VALID.items()}
+        parms.update(kwargs)
+        # Hope that order is preserved from self.VALID in modern Python
+        topack = tuple(
+            self.ENC[k][v] if k in self.ENC else int(v)
+            for k, v in parms.items()
+        )
+        self.sndbuf = pack("BBBBBBBBBB", 0x02, *topack)
+        # print("parms", parms)
+        # print("topack", topack)
+        # print("sndbuf", self.sndbuf)
+
+    def result(self) -> str:
+        return "Done, hopefully"
+
+
 class HRPref(Opv1):
     """
     Report or change HR log preferences.
