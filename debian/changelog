@@ -1,3 +1,12 @@
+bluering (0.04) experimental; urgency=medium
+
+  * Report "charging" status
+  * implement HRV and stress logging prefs
+  * implement UserPref setting
+  * Sleep log acquisition and parsing
+
+ -- Eugene Crosser <crosser@average.org>  Mon, 25 Nov 2024 21:52:46 +0100
+
 bluering (0.03) experimental; urgency=medium
 
   * parse-btsnoop-hci.py: in/out frames from pcap
