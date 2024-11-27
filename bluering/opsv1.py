@@ -228,6 +228,16 @@ class HRLog(Opv1):
         return "\n".join(str(el) for el in log)
 
 
+# class HRVLog(Opv1):
+#    """
+#    Report a day's worth of HRV history
+#    Specify day ago as "daysago=N"
+#    """
+#
+#    OPCODE = 0x39
+#    MULTI = True
+
+
 class UserPref(Opv1):
     """
     Set user characteristics.
