@@ -153,7 +153,7 @@ class SetTime(Opv1):
         )
 
     def recv(self, char, data: bytes) -> None:
-        if data[0] == 0x2f:  # It's all right, they tell us packet size
+        if data[0] == 0x2F:  # It's all right, they tell us packet size
             self.packetsize = data[1]
             return
         super().recv(char, data)
@@ -361,3 +361,32 @@ class HrvPref(_SimplePref):
     """
 
     OPCODE = 0x38
+
+
+class MeasureHR(Opv1):
+    """
+    Immediate measurement of HR
+    """
+
+    OPCODE = 0x69
+    MULTI = True
+    sndbuf = b"\x69\x01"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.hr = None
+
+    def recv(self, char, data: bytes) -> None:
+        super().recv(char, data)
+        if data[2]:
+            print("Error", data[2], data.hex())
+            self.done.set()
+            return
+        if data[3]:
+            self.hr = data[3]
+            self.done.set()
+        else:
+            print("Measuring in progress...")
+
+    def result(self):
+        return f"HR: {self.hr}"
