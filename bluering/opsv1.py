@@ -153,6 +153,9 @@ class SetTime(Opv1):
         )
 
     def recv(self, char, data: bytes) -> None:
+        if data[0] == 0x2f:  # It's all right, they tell us packet size
+            self.packetsize = data[1]
+            return
         super().recv(char, data)
         if (data[0] & 0x7F) == self.OPCODE:
             self.done.set()
