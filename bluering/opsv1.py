@@ -1,5 +1,5 @@
 from asyncio import Event
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from struct import pack, unpack
 from typing import Any, Dict, List, NamedTuple
 
@@ -231,11 +231,64 @@ class HRLog(Opv1):
 # class HRVLog(Opv1):
 #    """
 #    Report a day's worth of HRV history
-#    Specify day ago as "daysago=N"
+#    Specify day ago as "ago=N"
 #    """
 #
 #    OPCODE = 0x39
 #    MULTI = True
+
+
+class StressLog(Opv1):
+    """
+    Report day's worth of stress history
+    Specify days ago as "ago=N"
+    """
+
+    OPCODE = 0x37
+    MULTI = True
+
+    @property
+    def sndbuf(self) -> bytes:
+        # opcode + timestamp of past midnight
+        ago = self.kwargs.get("ago", 0)
+        return pack("B", int(ago))
+
+    def recv(self, char, data: bytes) -> None:
+        if not self.data:  # First frame
+            self.frames = data[2]
+            self.count = 0
+        if data[1] != self.count:
+            if data[1] == 0xFF:  # No data
+                self.done.set()
+                return
+            else:
+                print(
+                    "count mismatch",
+                    data.hex(),
+                    "expected",
+                    self.count,
+                    "of",
+                    self.frames,
+                )
+        self.count += 1
+        super().recv(char, data)
+        if self.count >= self.frames:
+            self.done.set()
+
+    def result(self) -> str:
+        bulk = memoryview(b"".join(buf[2:-1] for buf in self.data[1:]))
+        period = self.data[0][3]
+        ago = bulk[0]
+        datedrecs = (
+            (
+                datetime(*date.today().timetuple()[:6])
+                - timedelta(days=ago)
+                + timedelta(minutes=(i * period)),
+                v,
+            )
+            for i, v in enumerate(bulk[1:-3])
+        )
+        return "\n".join(f"{t.isoformat()}: {v}" for t, v in datedrecs if v)
 
 
 class UserPref(Opv1):
