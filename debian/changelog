@@ -1,3 +1,14 @@
+bluering (0.05) experimental; urgency=medium
+
+  * settime: ignore "packet size" response frame
+  * Instant HR measure
+  * HRVLog: my ring does not show it (in v1)
+  * Implement retrieval of stress log
+  * parse-btsnoop-hci.py: comment how to pull data
+  * Implement measure SpO2, though it seems useless
+
+ -- Eugene Crosser <crosser@average.org>  Thu, 28 Nov 2024 23:36:43 +0100
+
 bluering (0.04) experimental; urgency=medium
 
   * Report "charging" status
