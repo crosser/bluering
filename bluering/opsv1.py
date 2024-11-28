@@ -453,3 +453,18 @@ class MeasureHR(Opv1):
 
     def result(self):
         return f"HR: {self.hr}"
+
+
+class MeasureSPO2(Opv1):
+    """
+    Immediate measurement of SpO2.
+    Note that it does not return value, but may add an entry to historical data
+    """
+
+    OPCODE = 0x6A
+    sndbuf = b"\x6a\x03\62"
+
+    def result(self):
+        if self.data[0][1]:
+            return f"Returned code {self.data[0][1]}, though may have worked."
+        return "Executed, hopefully. New data may be available in the log."
