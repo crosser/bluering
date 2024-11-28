@@ -2,6 +2,9 @@
 
 # Needs `tshark` installed somewhere in the $PATH
 
+# Get btsnoop_hci.log from a root-enabled device with this command:
+# adb pull data/misc/bluetooth/logs/btsnoop_hci.log
+
 from sys import argv
 from json import load
 from subprocess import Popen, PIPE
