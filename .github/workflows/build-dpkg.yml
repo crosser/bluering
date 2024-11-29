@@ -18,6 +18,9 @@ jobs:
           args: --unsigned-source --unsigned-changes
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ github.workspace }}/${{ steps.build.outputs.filename }}
+        run: >
+          gh release create ${{github.event.push.tag_name}}
+          ${{ steps.build.outputs.filename }}
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        shell: bash
