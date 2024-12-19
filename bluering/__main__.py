@@ -55,8 +55,8 @@ async def main(addr: Optional[str], op: Op):
             )
             if (
                 (addr is not None and dev.address == addr)
-                or data.service_uuids
-                and ADV_SRV_UUID in data.service_uuids
+                or (addr is None and data.service_uuids
+                and ADV_SRV_UUID in data.service_uuids)
             ):
                 fdev = dev
                 print("Found", fdev, end="\033[K\n")
@@ -115,6 +115,6 @@ if __name__ == "__main__":
     kwargs = dict(el.split(sep="=", maxsplit=1) for el in args[1:])
     op = OPS[args[0]](**kwargs)
     try:
-        asyncio.run(main(opts.get("a", None), op))
+        asyncio.run(main(opts.get("-a", None), op))
     except KeyboardInterrupt:
         asyncio.run(shutdown())
