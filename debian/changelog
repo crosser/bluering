@@ -1,3 +1,11 @@
+bluering (0.06) experimental; urgency=medium
+
+  * Let's try to simplify release workflow
+  * Fix handling of explicit address
+  * try to fix action
+
+ -- Eugene Crosser <crosser@average.org>  Thu, 14 Aug 2025 00:30:24 +0200
+
 bluering (0.05) experimental; urgency=medium
 
   * settime: ignore "packet size" response frame
