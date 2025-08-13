@@ -19,7 +19,7 @@ jobs:
 
       - name: Upload Release
         run: >
-          gh release create ${{github.event.push.tag_name}}
+          gh release create ${GITHUB_REF#refs/tags/}
           ${{ steps.build.outputs.filename }}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
